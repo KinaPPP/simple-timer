@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "シンプルタイマー",
+  "version": "1.2.0",
+  "description": "アイコンにカウントダウンを表示するシンプルなタイマー",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "シンプルタイマー"
+  },
+  "permissions": [
+    "alarms",
+    "storage",
+    "offscreen",
+    "notifications"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["sound.mp3"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

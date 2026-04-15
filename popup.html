@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      width: 190px;
+      background: #e8e8e8;
+      color: #1a1a1a;
+      padding: 8px 10px 10px;
+      user-select: none;
+    }
+
+    h1 {
+      font-size: 11px;
+      font-weight: 700;
+      color: #555;
+      letter-spacing: 0.05em;
+      margin-bottom: 7px;
+    }
+
+    /* ===== ディスプレイ共通 ===== */
+    .time-display {
+      border-radius: 8px;
+      border: 1px solid #d0d0d0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 8px 5px;
+      margin-bottom: 7px;
+      min-height: 56px;
+      gap: 2px;
+    }
+
+    /* 入力モード */
+    .mode-input {
+      background: #f7f7f7;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: center;
+      gap: 5px;
+    }
+    .mode-input .number {
+      font-size: 36px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      min-width: 50px;
+      text-align: right;
+    }
+    .mode-input .unit-col { display: flex; flex-direction: column; gap: 1px; }
+    .mode-input .unit     { font-size: 12px; color: #555; font-weight: 600; line-height: 1; }
+    .mode-input .hint     { font-size: 9px; color: #aaa; line-height: 1; }
+
+    /* カウント中モード */
+    .mode-running {
+      background: #f7f7f7;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .mode-running:hover  { background: #f0f0f0; }
+    .mode-running:active { background: #e8e8e8; }
+    .mode-running .remaining {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a1a1a;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .mode-running .sub-hint { font-size: 9px; color: #aaa; }
+
+    /* 一時停止モード */
+    .mode-paused {
+      background: #fff3e0;
+      border-color: #ffcc80;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .mode-paused:hover  { background: #ffe0b2; }
+    .mode-paused:active { background: #ffd082; }
+    .mode-paused .remaining {
+      font-size: 17px;
+      font-weight: 700;
+      color: #e65100;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .mode-paused .sub-hint { font-size: 9px; color: #ffab40; }
+
+    /* 終了モード */
+    .mode-finished {
+      background: #ffebee;
+      border-color: #ef9a9a;
+    }
+    .mode-finished .remaining {
+      font-size: 17px;
+      font-weight: 700;
+      color: #e53935;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .mode-finished .sub-hint { font-size: 9px; color: #ef9a9a; }
+
+    /* ===== テンキー ===== */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-bottom: 7px;
+    }
+
+    .key {
+      background: #f7f7f7;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .key:hover  { background: #efefef; }
+    .key:active { background: #e0e0e0; }
+    .key.clear  { font-size: 10px; color: #888; font-weight: 600; }
+    .key.del    { font-size: 13px; color: #888; }
+    .key.locked {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* ===== ボタン行 ===== */
+    .btn-row { display: flex; gap: 5px; }
+
+    .btn-start {
+      flex: 1;
+      padding: 9px;
+      background: #4a8ce0;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-start:hover:not(:disabled)  { background: #3a7bd5; }
+    .btn-start:active:not(:disabled) { background: #2d6abf; }
+    .btn-start:disabled {
+      background: #b8b8b8;
+      color: #e8e8e8;
+      cursor: default;
+    }
+
+    .btn-reset {
+      padding: 9px 11px;
+      background: #f7f7f7;
+      color: #999;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-reset:hover  { background: #ffe0e0; color: #e53935; border-color: #ef9a9a; }
+    .btn-reset:active { background: #ffcdd2; }
+
+    /* ===== サウンド設定 ===== */
+    .divider {
+      height: 1px;
+      background: #d0d0d0;
+      margin: 8px 0;
+    }
+
+    .sound-section { display: flex; flex-direction: column; gap: 5px; }
+
+    .sound-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sound-label {
+      font-size: 10px;
+      color: #777;
+      font-weight: 600;
+      width: 30px;
+      flex-shrink: 0;
+    }
+
+    .seg-btns {
+      display: flex;
+      gap: 3px;
+      flex: 1;
+    }
+
+    .seg-btn {
+      flex: 1;
+      padding: 5px 0;
+      background: #f7f7f7;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.1s;
+      user-select: none;
+    }
+    .seg-btn:hover  { background: #efefef; }
+    .seg-btn.active {
+      background: #dceeff;
+      border-color: #7ab4e8;
+      color: #2a6ab5;
+    }
+    .seg-btn.mute-btn.active {
+      background: #f0f0f0;
+      border-color: #bbb;
+      color: #999;
+    }
+
+    /* ===== ダークモードトグル ===== */
+    .dark-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #d0d0d0;
+    }
+    .dark-label {
+      font-size: 10px;
+      color: #777;
+      font-weight: 600;
+    }
+    .toggle {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      left: 2.5px;
+      top: 2.5px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-track { background: #4a8ce0; }
+    .toggle input:checked + .toggle-track::after { transform: translateX(14px); }
+  </style>
+</head>
+<body>
+  <h1>シンプルタイマー <span style="font-weight:400;color:#aaa;font-size:10px;">ver 1.2</span></h1>
+
+  <!-- ディスプレイ（状態に応じて中身を差し替え） -->
+  <div class="time-display mode-input" id="display">
+    <div class="number" id="dispNumber">0</div>
+    <div class="unit-col">
+      <div class="unit">分</div>
+      <div class="hint">最大99分</div>
+    </div>
+  </div>
+
+  <!-- テンキー PC並び: 789 / 456 / 123 / クリア・0・⌫ -->
+  <div class="numpad" id="numpad">
+    <div class="key" id="k7">7</div>
+    <div class="key" id="k8">8</div>
+    <div class="key" id="k9">9</div>
+    <div class="key" id="k4">4</div>
+    <div class="key" id="k5">5</div>
+    <div class="key" id="k6">6</div>
+    <div class="key" id="k1">1</div>
+    <div class="key" id="k2">2</div>
+    <div class="key" id="k3">3</div>
+    <div class="key clear" id="kClear">クリア</div>
+    <div class="key" id="k0">0</div>
+    <div class="key del" id="kDel">⌫</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-start" id="btnStart" disabled>スタート ▶</button>
+    <button class="btn-reset" id="btnReset" title="リセット">■</button>
+  </div>
+
+  <div class="dark-row">
+    <span class="dark-label">アイコン文字を白くする</span>
+    <label class="toggle">
+      <input type="checkbox" id="darkToggle">
+      <span class="toggle-track"></span>
+    </label>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
